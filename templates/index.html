@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SeqSense | Activity prediction</title>
+  <style>
+    :root{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:#172221;background:#f3f6f3}*{box-sizing:border-box}body{margin:0}.wrap{max-width:760px;margin:48px auto;padding:0 20px}.card{background:#fff;border:1px solid #dfe8e1;border-radius:16px;padding:28px;box-shadow:0 12px 40px #1734260d}h1{font-size:2rem;margin:0 0 8px;color:#16483e}p{color:#53645e;line-height:1.6}.grid{display:grid;gap:16px;margin:24px 0}label{font-weight:650;font-size:.93rem}select,input[type=file]{width:100%;margin-top:8px;border:1px solid #ccd8d0;border-radius:9px;padding:12px;background:white}button{border:0;border-radius:9px;padding:12px 18px;background:#176a52;color:white;font-weight:700;cursor:pointer}button:disabled{background:#a7b4ad;cursor:not-allowed}.note,.flash{background:#eef5f0;padding:12px 14px;border-radius:9px;color:#35564a;font-size:.9rem}.flash{background:#fff1df;color:#754d17;margin:12px 0}.result{margin-top:22px;border-top:1px solid #e3ebe5;padding-top:18px}.result strong{font-size:1.3rem;color:#176a52}.scores{display:grid;gap:8px;margin-top:14px}.score{display:flex;justify-content:space-between;color:#40544a}.footer{font-size:.82rem;margin-top:20px}
+  </style>
+</head>
+<body><main class="wrap"><section class="card">
+  <h1>SeqSense</h1>
+  <p>Classify one smartphone sensor window with a trained model. Upload a CSV with 128 samples and 9 channels in the order shown below.</p>
+  {% for message in get_flashed_messages() %}<div class="flash">{{ message }}</div>{% endfor %}
+  <div class="note"><b>Input channel order:</b> {{ channels|join(", ") }}<br>One CSV row is one time step. Do not upload personal data.</div>
+  <form action="{{ url_for('predict') }}" method="post" enctype="multipart/form-data" class="grid">
+    <label>Model
+      <select name="model" required {% if not models %}disabled{% endif %}>
+        {% for name in models %}<option value="{{ name }}">{{ name }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Sensor window CSV
+      <input type="file" name="window" accept=".csv,text/csv" required>
+    </label>
+    <button type="submit" {% if not models %}disabled{% endif %}>Predict activity</button>
+  </form>
+  {% if not models %}<div class="flash">No trained checkpoints found. Prepare the dataset and train a model first.</div>{% endif %}
+  {% if prediction %}<section class="result"><p>Predicted activity</p><strong>{{ prediction.label }}</strong><div class="scores">{% for label, score in prediction.scores %}<div class="score"><span>{{ label }}</span><span>{{ "%.1f"|format(score * 100) }}%</span></div>{% endfor %}</div></section>{% endif %}
+  <p class="footer">Research demonstration only. Predictions are not a health or safety assessment. “Live” browser sensor streaming is not included in this version.</p>
+</section></main></body></html>
